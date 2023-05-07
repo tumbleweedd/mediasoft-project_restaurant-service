@@ -3,11 +3,12 @@ package repositories
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/models"
+	"time"
 )
 
 type Menu interface {
 	CreateMenu(menu models.Menu, salads, garnishes, meats, soups, drinks, desserts []string) error
-	GetMenu()
+	GetMenu(onDateMenu time.Time) (*models.Menu, []*models.Product, error)
 }
 
 type Order interface {

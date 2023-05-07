@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/models"
+	"time"
 )
 
 type MenuRepository struct {
@@ -46,7 +47,12 @@ func (mr *MenuRepository) CreateMenu(menu models.Menu, salads, garnishes, meats,
 	return tx.Commit()
 }
 
-func (mr *MenuRepository) GetMenu() {
-	//TODO implement me
-	panic("implement me")
+func (mr *MenuRepository) GetMenu(menuOnDate time.Time) (*models.Menu, []*models.Product, error) {
+	const getMenuQuery = `select uuid, on_date, opening_record_at, closing_record_at, created_at 
+							from restaurant.menu where uuid=$1`
+
+	var menu models.Menu
+
+	err := mr.db.Get(&menu, getMenuQuery, menuOnDate)
+
 }
