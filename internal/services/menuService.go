@@ -8,6 +8,7 @@ import (
 	"gitlab.com/mediasoft-internship/final-task/contracts/pkg/contracts/restaurant"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type MenuService struct {
@@ -39,6 +40,47 @@ func (ms *MenuService) CreateMenu(ctx context.Context, request *restaurant.Creat
 }
 
 func (ms *MenuService) GetMenu(ctx context.Context, request *restaurant.GetMenuRequest) (*restaurant.GetMenuResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	menu, products, err := ms.menuRepo.GetMenu(request.OnDate.AsTime())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	data := &restaurant.Menu{
+		Uuid:            menu.MenuUuid.String(),
+		OnDate:          timestamppb.New(menu.OnDate),
+		OpeningRecordAt: timestamppb.New(menu.OpeningRecordAt),
+		ClosingRecordAt: timestamppb.New(menu.ClosingRecordAt),
+	}
+
+	for _, product := range products {
+		addProductToMenu(data, product)
+	}
+
+	return &restaurant.GetMenuResponse{Menu: data}, nil
+}
+
+func addProductToMenu(menu *restaurant.Menu, product *models.Product) {
+	p := &restaurant.Product{
+		Uuid:        product.ProductUUID.String(),
+		Name:        product.Name,
+		Description: product.Description,
+		Type:        restaurant.ProductType(restaurant.ProductType_value[product.Type.String()]),
+		Weight:      product.Weight,
+		Price:       product.Price,
+	}
+
+	switch p.Type {
+	case restaurant.ProductType_PRODUCT_TYPE_SALAD:
+		menu.Salads = append(menu.Salads, p)
+	case restaurant.ProductType_PRODUCT_TYPE_GARNISH:
+		menu.Garnishes = append(menu.Garnishes, p)
+	case restaurant.ProductType_PRODUCT_TYPE_MEAT:
+		menu.Meats = append(menu.Meats, p)
+	case restaurant.ProductType_PRODUCT_TYPE_SOUP:
+		menu.Soups = append(menu.Soups, p)
+	case restaurant.ProductType_PRODUCT_TYPE_DRINK:
+		menu.Drinks = append(menu.Drinks, p)
+	case restaurant.ProductType_PRODUCT_TYPE_DESSERT:
+		menu.Desserts = append(menu.Desserts, p)
+	}
 }

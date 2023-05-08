@@ -49,10 +49,21 @@ func (mr *MenuRepository) CreateMenu(menu models.Menu, salads, garnishes, meats,
 
 func (mr *MenuRepository) GetMenu(menuOnDate time.Time) (*models.Menu, []*models.Product, error) {
 	const getMenuQuery = `select uuid, on_date, opening_record_at, closing_record_at, created_at 
-							from restaurant.menu where uuid=$1`
+						  from restaurant.menu where on_date=$1`
 
 	var menu models.Menu
+	var products []*models.Product
 
 	err := mr.db.Get(&menu, getMenuQuery, menuOnDate)
+	if err != nil {
+		return nil, nil, err
+	}
 
+	const getProductsInMenuQuery = `select p.uuid, p.name, p.description, p.type, p.weight, p.price, p.created_at
+    								from restaurant.product p
+										join restaurant.menu_product mp on p.uuid = mp.order_uuid
+									where mp.menu_uuid=$1`
+	err = mr.db.Select(&products, getProductsInMenuQuery, menu.MenuUuid.String())
+
+	return &menu, products, err
 }
