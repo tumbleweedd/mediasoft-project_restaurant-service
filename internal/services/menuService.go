@@ -50,6 +50,7 @@ func (ms *MenuService) GetMenu(ctx context.Context, request *restaurant.GetMenuR
 		OnDate:          timestamppb.New(menu.OnDate),
 		OpeningRecordAt: timestamppb.New(menu.OpeningRecordAt),
 		ClosingRecordAt: timestamppb.New(menu.ClosingRecordAt),
+		CreatedAt:       timestamppb.New(menu.CreatedAt),
 	}
 
 	for _, product := range products {
@@ -67,6 +68,7 @@ func addProductToMenu(menu *restaurant.Menu, product *models.Product) {
 		Type:        restaurant.ProductType(restaurant.ProductType_value[product.Type.String()]),
 		Weight:      product.Weight,
 		Price:       product.Price,
+		CreatedAt:   timestamppb.New(product.CreatedAt),
 	}
 
 	switch p.Type {
