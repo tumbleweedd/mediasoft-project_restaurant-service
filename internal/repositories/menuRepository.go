@@ -49,7 +49,7 @@ func (mr *MenuRepository) CreateMenu(menu models.Menu, salads, garnishes, meats,
 
 func (mr *MenuRepository) GetMenu(menuOnDate time.Time) (*models.Menu, []*models.Product, error) {
 	const getMenuQuery = `select uuid, on_date, opening_record_at, closing_record_at, created_at 
-						  from restaurant.menu where on_date=$1`
+						  from restaurant.menu where date(on_date)=date($1)`
 
 	var menu models.Menu
 	var products []*models.Product
