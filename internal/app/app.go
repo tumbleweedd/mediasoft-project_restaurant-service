@@ -7,6 +7,7 @@ import (
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/services"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/database/postgres"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/logger"
+	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/rabbitmq"
 	"gitlab.com/mediasoft-internship/final-task/contracts/pkg/contracts/restaurant"
 	"google.golang.org/grpc"
 	"net"
@@ -41,8 +42,19 @@ func Run() {
 
 	s := grpc.NewServer()
 
+	rabbitmqConn, err := rabbitmq.NewRabbitMQConn("guest", "guest", "localhost", "5672", "queue_name")
+	if err != nil {
+		logger.Errorf("Failed to rabbitMQ conn: ", err)
+	}
+	defer rabbitmqConn.Close()
+
 	repo := repositories.NewRepository(db)
-	svc := services.NewService(repo)
+	svc := services.NewService(repo, rabbitmqConn)
+	
+	err = rabbitmqConn.ConsumeOrders()
+	if err != nil {
+		logger.Errorf("Cannot consume orders: ", err)
+	}
 
 	restaurant.RegisterMenuServiceServer(s, svc)
 	restaurant.RegisterOrderServiceServer(s, svc)

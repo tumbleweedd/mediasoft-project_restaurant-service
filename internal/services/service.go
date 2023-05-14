@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/repositories"
+	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/rabbitmq"
 	"gitlab.com/mediasoft-internship/final-task/contracts/pkg/contracts/restaurant"
 )
 
@@ -27,12 +28,13 @@ type Service struct {
 	restaurant.UnsafeMenuServiceServer
 	restaurant.UnsafeOrderServiceServer
 	restaurant.UnsafeProductServiceServer
+	rabbitmq *rabbitmq.RabbitMQConn
 }
 
-func NewService(r *repositories.Repository) *Service {
+func NewService(r *repositories.Repository, rabbitmq *rabbitmq.RabbitMQConn) *Service {
 	return &Service{
 		Menu:    NewMenuService(r.Menu),
-		Order:   NewOrderService(r.Order),
+		Order:   NewOrderService(r.Order, rabbitmq),
 		Product: NewProductService(r.Product),
 	}
 }
