@@ -25,14 +25,6 @@ func (r *RabbitMQConn) ConsumeOrders() error {
 				continue
 			}
 
-			/*_, err = orderService.GetUpToDateOrderList(context.Background(), &restaurant.GetUpToDateOrderListRequest{})
-
-			if err != nil {
-				logger.Infof("Ошибка сохранения заказа: %s", err)
-				//d.Ack(false)
-				continue
-			}*/
-
 			d.Ack(false)
 			fmt.Println(order.OrderUUID)
 		}

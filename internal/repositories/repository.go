@@ -1,8 +1,10 @@
 package repositories
 
 import (
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/models"
+	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/broker/kafka/kafkaModels"
 	"time"
 )
 
@@ -12,7 +14,9 @@ type Menu interface {
 }
 
 type Order interface {
-	GetUpToDateOrderList()
+	GetUpToDateOrderList() ([]*models.RestaurantOrderItem, []*models.OrdersByCompanyRows, error)
+	CreateOrder(orderUUID uuid.UUID, order kafkaModels.OrderByOffice) error
+	GetDataForStatisticFromOrder(orderUUID uuid.UUID, dataChanel chan<- models.ProductsFromOrdersResponse) error
 }
 
 type Product interface {

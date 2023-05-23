@@ -3,15 +3,25 @@ package app
 import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/models"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/repositories"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/internal/services"
+	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/broker/kafka/consumer"
+	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/broker/kafka/producer"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/database/postgres"
 	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/logger"
-	"github.com/tumbleweedd/mediasoft-intership/restaraunt-service/pkg/rabbitmq"
 	"gitlab.com/mediasoft-internship/final-task/contracts/pkg/contracts/restaurant"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 	"os"
+)
+
+const (
+	orderTopic    = "orders"
+	sendStatTopic = "prodStat"
+	broker        = "192.168.0.109:9092"
+	bufferSize    = 6
 )
 
 func Run() {
@@ -41,21 +51,29 @@ func Run() {
 	logger.Infof("Auth on %s", os.Getenv("PORT"))
 
 	s := grpc.NewServer()
-
-	rabbitmqConn, err := rabbitmq.NewRabbitMQConn("guest", "guest", "localhost", "5672", "queue_name")
-	if err != nil {
-		logger.Errorf("Failed to rabbitMQ conn: ", err)
-	}
-	defer rabbitmqConn.Close()
-
 	repo := repositories.NewRepository(db)
-	svc := services.NewService(repo, rabbitmqConn)
-	
-	err = rabbitmqConn.ConsumeOrders()
-	if err != nil {
-		logger.Errorf("Cannot consume orders: ", err)
-	}
 
+	dataChannel := make(chan models.ProductsFromOrdersResponse)
+	done := make(chan struct{})
+	defer close(done)
+	defer close(dataChannel)
+
+	kafkaConsumer, err := consumer.NewConsumer([]string{broker}, repo)
+	if err != nil {
+		log.Println("Failed to kafka conn: ", err)
+	}
+	defer kafkaConsumer.Close()
+
+	kafkaProducer, err := producer.NewProducer(broker)
+	if err != nil {
+		log.Fatalln("Failed to kafka conn: ", err)
+	}
+	defer kafkaProducer.Close()
+
+	consumeOrders(kafkaConsumer, orderTopic, dataChannel)
+	produceStat(kafkaProducer, dataChannel, done, sendStatTopic, bufferSize)
+
+	svc := services.NewService(repo)
 	restaurant.RegisterMenuServiceServer(s, svc)
 	restaurant.RegisterOrderServiceServer(s, svc)
 	restaurant.RegisterProductServiceServer(s, svc)
@@ -64,5 +82,18 @@ func Run() {
 		logger.Errorf("Failed to serve: %v", err)
 		return
 	}
+}
 
+func consumeOrders(kafkaConsumer *consumer.Consumer, topic string, dataChannel chan<- models.ProductsFromOrdersResponse) {
+	go func() {
+		err := kafkaConsumer.Consume(topic, dataChannel)
+		if err != nil {
+			log.Printf("Error consuming Kafka topic: %s", err)
+		}
+	}()
+	log.Printf("Started listening to Kafka topic: %s", topic)
+}
+
+func produceStat(kafkaProducer *producer.KafkaProducer, dataChannel <-chan models.ProductsFromOrdersResponse, done chan struct{}, topic string, bufferSize int) {
+	go kafkaProducer.FormatBuffer(dataChannel, done, sendStatTopic, bufferSize)
 }

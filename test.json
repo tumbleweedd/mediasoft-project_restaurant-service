@@ -1,0 +1,30 @@
+{
+  "result": [
+    {
+      "count": 3,
+      "product_uuid": "12dc4037-52e8-42a8-b2d4-c49a7eaddcb7",
+      "price": 12,
+      "product_name": "p1",
+      "product_type": "PRODUCT_TYPE_SALAD",
+      "created_at": "2023-05-20 12:03:31"
+    },
+    {
+      "count": 1,
+      "product_uuid": "12dc4037-52e8-42a8-b2d4-c49a7eaddcb7",
+      "price": 12,
+      "product_name": "p1",
+      "product_type": "PRODUCT_TYPE_SALAD",
+      "created_at": "2023-05-20 12:09:10.852013"
+    },
+    {
+      "count": 2,
+      "product_uuid": "9f862e81-dd26-4a12-8716-9f12e6dba141",
+      "price": 35,
+      "product_name": "p2",
+      "product_type": "PRODUCT_TYPE_MEAT",
+      "created_at": "2023-05-20 12:11:16.950358"
+    }
+  ]
+}
+
+
