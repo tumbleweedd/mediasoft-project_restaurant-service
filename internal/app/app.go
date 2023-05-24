@@ -19,9 +19,8 @@ import (
 
 const (
 	orderTopic    = "orders"
-	sendStatTopic = "prodStat"
+	sendStatTopic = "testProdStat1"
 	broker        = "192.168.0.109:9092"
-	bufferSize    = 6
 )
 
 func Run() {
@@ -71,7 +70,7 @@ func Run() {
 	defer kafkaProducer.Close()
 
 	consumeOrders(kafkaConsumer, orderTopic, dataChannel)
-	produceStat(kafkaProducer, dataChannel, done, sendStatTopic, bufferSize)
+	produceStat(kafkaProducer, dataChannel, done, sendStatTopic)
 
 	svc := services.NewService(repo)
 	restaurant.RegisterMenuServiceServer(s, svc)
@@ -94,6 +93,6 @@ func consumeOrders(kafkaConsumer *consumer.Consumer, topic string, dataChannel c
 	log.Printf("Started listening to Kafka topic: %s", topic)
 }
 
-func produceStat(kafkaProducer *producer.KafkaProducer, dataChannel <-chan models.ProductsFromOrdersResponse, done chan struct{}, topic string, bufferSize int) {
-	go kafkaProducer.FormatBuffer(dataChannel, done, sendStatTopic, bufferSize)
+func produceStat(kafkaProducer *producer.KafkaProducer, dataChannel <-chan models.ProductsFromOrdersResponse, done chan struct{}, topic string) {
+	go kafkaProducer.FormatBuffer(dataChannel, done, topic)
 }

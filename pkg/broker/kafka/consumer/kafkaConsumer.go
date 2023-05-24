@@ -81,6 +81,7 @@ func (c *Consumer) Consume(topic string, dataChan chan<- models.ProductsFromOrde
 						logger.Infof("Error creating order with kafka message: %s", err)
 					}
 					logger.Info("Создал заказ")
+					fmt.Println(response.Order.OfficeUUID)
 					go func() {
 						err = c.orderRepo.GetDataForStatisticFromOrder(orderUUID, dataChan)
 						if err != nil {
