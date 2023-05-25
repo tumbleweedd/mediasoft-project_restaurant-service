@@ -74,7 +74,7 @@ func getResponse(response *models.ResponseBody) *restaurant.GetUpToDateOrderList
 
 	for _, item := range response.TotalOrdersByOffice {
 		ordersByOffice := &restaurant.OrdersByOffice{
-			CompanyId:     item.OfficeUUID.String(),
+			OfficeUuid:    item.OfficeUUID.String(),
 			OfficeName:    item.OfficeName,
 			OfficeAddress: item.OfficeAddress,
 			Result:        make([]*restaurant.Order, len(item.Order)),
